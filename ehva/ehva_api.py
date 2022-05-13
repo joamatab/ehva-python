@@ -114,7 +114,7 @@ class EhvaApi:
         # Make Station config verifications
         config_id = None
         if station_config is not None:
-            if not all(key in station_config.keys() for key in ['name', 'version']):
+            if any(key not in station_config for key in ['name', 'version']):
                 raise ValueError("argument station_config must contain 'name' and 'version' fields.")
 
             config = [c for c in self.station_configurations if c['name'] == station_config['name'] and c['version'] == station_config['version']]
@@ -124,11 +124,22 @@ class EhvaApi:
 
 
         # Make DUT verifications
-        optical_port_id = None 
+        optical_port_id = None
         electrical_port_id = None
         if dut is not None and (dut['optical port'] is not None or dut['electrical port'] is not None):
 
-            if not all(key in ['wafer', 'reticle', 'die', 'circuit', 'optical port', 'electrical port'] for key in dut.keys()):
+            if any(
+                key
+                not in [
+                    'wafer',
+                    'reticle',
+                    'die',
+                    'circuit',
+                    'optical port',
+                    'electrical port',
+                ]
+                for key in dut
+            ):
                 raise ValueError("argument 'dut' must contain the following fields: 'wafer', 'reticle', 'die', 'circuit', 'optical port', 'electrical port'.")
 
             try:
@@ -141,7 +152,7 @@ class EhvaApi:
 
             except Exception:
                 raise ValueError(f"The provided DUT could not be found, please review hierarchy: {dut}.")
-            
+
 
         # Perform request
         params = {
@@ -153,9 +164,7 @@ class EhvaApi:
                   'isNoSaveMode' : nosave_mode
                   }
 
-        result = self._perform_get("/runtime/runexisting", params=params)
-
-        return result
+        return self._perform_get("/runtime/runexisting", params=params)
 
 
 
